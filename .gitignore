@@ -1,0 +1,8 @@
+__pycache__/
+.DS_Store
+dataset/
+results
+results_fpn/
+results_darknet/
+tools/objdet_models/resnet/pretrained/
+tools/objdet_models/darknet/pretrained/
