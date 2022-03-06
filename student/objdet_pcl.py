@@ -15,6 +15,7 @@ import cv2
 import numpy as np
 import torch
 import zlib
+import open3d as o3d
 
 # add project directory to python path to enable relative imports
 import os
@@ -30,6 +31,8 @@ from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2, lab
 # object detection tools and helper functions
 import misc.objdet_tools as tools
 
+def right_arrow_key_callback(vis):
+    vis.destroy_window()
 
 # visualize lidar point-cloud
 def show_pcl(pcl):
@@ -39,15 +42,23 @@ def show_pcl(pcl):
     print("student task ID_S1_EX2")
 
     # step 1 : initialize open3d with key callback and create window
-    
+    vis = o3d.visualization.VisualizerWithKeyCallback()
+    vis.create_window()
+
     # step 2 : create instance of open3d point-cloud class
+    pcd = o3d.geometry.PointCloud()
 
     # step 3 : set points in pcd instance by converting the point-cloud into 3d vectors (using open3d function Vector3dVector)
+    pcd.points = o3d.utility.Vector3dVector(pcl[:, :3])
 
     # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
+    vis.add_geometry(pcd)
+    #vis.update_geometry(pcd)
     
     # step 5 : visualize point cloud and keep window open until right-arrow is pressed (key-code 262)
 
+    vis.register_key_callback(262, right_arrow_key_callback)
+    vis.run()
     #######
     ####### ID_S1_EX2 END #######     
        
@@ -110,10 +121,14 @@ def bev_from_pcl(lidar_pcl, configs):
     print("student task ID_S2_EX1")
 
     ## step 1 :  compute bev-map discretization by dividing x-range by the bev-image height (see configs)
+    bev_discret = (configs.lim_x[1] - configs.lim_x[0]) / configs.bev_height
 
-    ## step 2 : create a copy of the lidar pcl and transform all metrix x-coordinates into bev-image coordinates    
+    ## step 2 : create a copy of the lidar pcl and transform all metrix x-coordinates into bev-image coordinates   
+    lidar_pcl_cpy = np.copy(lidar_pcl)
+    lidar_pcl_cpy[:, 0] = np.int_(np.floor(lidar_pcl_cpy[:, 0] / bev_discret)) 
 
     # step 3 : perform the same operation as in step 2 for the y-coordinates but make sure that no negative bev-coordinates occur
+    lidar_pcl_cpy[:, 1] = np.int_(np.floor(lidar_pcl_cpy[:, 1] / bev_discret))
 
     # step 4 : visualize point-cloud using the function show_pcl from a previous task
     
