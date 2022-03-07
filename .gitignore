@@ -1,8 +1,9 @@
 __pycache__/
 .DS_Store
+.vscode/
 dataset/
 results
-results_fpn/
+results_resnet/
 results_darknet/
 tools/objdet_models/resnet/pretrained/
 tools/objdet_models/darknet/pretrained/

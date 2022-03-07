@@ -43,17 +43,17 @@ def load_configs_model(model_name='darknet', configs=None):
     
     # set parameters according to model type
     if model_name == "darknet":
-        configs.model_path = os.path.join(parent_path, 'tools', 'objdet_models', 'darknet')
-        configs.pretrained_filename = os.path.join(configs.model_path, 'pretrained', 'complex_yolov4_mse_loss.pth')
-        configs.arch = 'darknet'
-        configs.batch_size = 4
+        configs.model_path = os.path.join(parent_path, 'tools', 'objdet_models', 'darknet') 
+        configs.pretrained_filename = os.path.join(configs.model_path, 'pretrained', 'complex_yolov4_mse_loss.pth') 
+        configs.arch = 'darknet' 
+        configs.batch_size = 4 
         configs.cfgfile = os.path.join(configs.model_path, 'config', 'complex_yolov4.cfg')
         configs.conf_thresh = 0.5
         configs.distributed = False
         configs.img_size = 608
         configs.nms_thresh = 0.4
-        configs.num_samples = None
-        configs.num_workers = 4
+        configs.num_samples = None 
+        configs.num_workers = 4 
         configs.pin_memory = True
         configs.use_giou_loss = False
 
@@ -61,7 +61,48 @@ def load_configs_model(model_name='darknet', configs=None):
         ####### ID_S3_EX1-3 START #######     
         #######
         print("student task ID_S3_EX1-3")
-
+        configs.model_path = os.path.join(parent_path, 'tools', 'objdet_models', 'resnet')
+        configs.pretrained_filename = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth') 
+        configs.conf_thresh = 0.5
+        configs.nms_thresh = 0.4
+        configs.saved_fn = 'fpn_resnet_18'
+        configs.arch = 'fpn_resnet'
+        configs.pretrained_path = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth') 
+        configs.K = 50
+        configs.no_cuda = False
+        configs.gpu_idx = 0
+        configs.num_samples = None
+        configs.num_workers = 1
+        configs.batch_size = 4
+        configs.peak_thresh = 0.2
+        configs.save_test_output = False
+        configs.output_width = 608
+        configs.output_video_fn = 'out_fpn_resnet_18'
+        configs.output_format = 'image'
+        configs.pin_memory = True
+        configs.distributed = False  # For testing on 1 GPU only
+        configs.input_size = (608, 608)
+        configs.hm_size = (152, 152)
+        configs.down_ratio = 4
+        configs.max_objects = 50
+        configs.imagenet_pretrained = False
+        configs.head_conv = 64
+        configs.num_classes = 3
+        configs.num_center_offset = 2
+        configs.num_z = 1
+        configs.num_dim = 3
+        configs.num_direction = 2  # sin, cos
+        configs.heads = {
+            'hm_cen': configs.num_classes,
+            'cen_offset': configs.num_center_offset,
+            'direction': configs.num_direction,
+            'z_coor': configs.num_z,
+            'dim': configs.num_dim
+        }
+        configs.num_input_features = 4
+        #configs.root_dir = '../'
+        #configs.dataset_dir = os.path.join(configs.root_dir, 'dataset', 'kitti')
+    
         #######
         ####### ID_S3_EX1-3 END #######     
 
@@ -110,6 +151,7 @@ def create_model(configs):
     # create model depending on architecture name
     if (configs.arch == 'darknet') and (configs.cfgfile is not None):
         print('using darknet')
+        #def __init__(self, cfgfile, use_giou_loss):
         model = darknet(cfgfile=configs.cfgfile, use_giou_loss=configs.use_giou_loss)    
     
     elif 'fpn_resnet' in configs.arch:
@@ -118,7 +160,9 @@ def create_model(configs):
         ####### ID_S3_EX1-4 START #######     
         #######
         print("student task ID_S3_EX1-4")
-
+        arch_parts = configs.saved_fn.split('_')
+        num_layers = int(arch_parts[-1])
+        model = fpn_resnet.get_pose_net(num_layers=num_layers, heads=configs.heads, head_conv=configs.head_conv,imagenet_pretrained=configs.imagenet_pretrained)
         #######
         ####### ID_S3_EX1-4 END #######     
     
@@ -167,7 +211,10 @@ def detect_objects(input_bev_maps, model, configs):
             ####### ID_S3_EX1-5 START #######     
             #######
             print("student task ID_S3_EX1-5")
-
+            detections = decode(outputs['hm_cen'], outputs['cen_offset'], outputs['direction'], outputs['z_coor'], outputs['dim'])
+            print(detections)
+            print(post_processing(detections.numpy(), configs)) 
+            #print(detections)         
             #######
             ####### ID_S3_EX1-5 END #######     
 
