@@ -201,7 +201,7 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
     for row in detections:
         # extract detection
         _id, _x, _y, _z, _h, _w, _l, _yaw = row
-
+    
         # convert from metric into pixel coordinates
         x = (_y - configs.lim_y[0]) / (configs.lim_y[1] - configs.lim_y[0]) * configs.bev_width
         y = (_x - configs.lim_x[0]) / (configs.lim_x[1] - configs.lim_x[0]) * configs.bev_height
@@ -210,6 +210,12 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
         l = _l / (configs.lim_x[1] - configs.lim_x[0]) * configs.bev_height
         yaw = -_yaw
 
+        print('(x, y, z)')
+        print('metric value: ({}, {}, {})'.format(_x, _y, _z))
+        print('pixel value: ({}, {}, {})'.format(x, y, z))
+        #print('(h, w, l)')
+        #print('metric value: ({}, {}, {})'.format(_h, _w, _l))
+        #print('pixel value: ({}, {}, {})'.format(_h, w, l))
         # draw object bounding box into birds-eye view
         if not color:
             color = configs.obj_colors[int(_id)]
@@ -369,6 +375,9 @@ def show_objects_labels_in_bev(detections, object_labels, bev_maps, configs):
     
     label_detections = convert_labels_into_objects(object_labels, configs)
     project_detections_into_bev(bev_map, label_detections, configs, [0,255,0])
+    print("")
+    print("==============================================")
+    print("")
     project_detections_into_bev(bev_map, detections, configs, [0,0,255])
     
 

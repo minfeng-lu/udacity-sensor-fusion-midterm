@@ -212,8 +212,7 @@ def detect_objects(input_bev_maps, model, configs):
             #######
             print("student task ID_S3_EX1-5")
             detections = decode(outputs['hm_cen'], outputs['cen_offset'], outputs['direction'], outputs['z_coor'], outputs['dim'])
-            print(detections)
-            print(post_processing(detections.numpy(), configs)) 
+            detections  = post_processing(detections.numpy(), configs)
             #print(detections)         
             #######
             ####### ID_S3_EX1-5 END #######     
@@ -226,12 +225,37 @@ def detect_objects(input_bev_maps, model, configs):
     print("student task ID_S3_EX2")
     objects = [] 
 
+    '''
+    (x,y,z) before: (49.575214383670755, 4.0394287166964205, 1.0292643213596193) metric
+    (x,y,z) after: (353.1194531950285, 602.8346069054364, 2.0292643213596193) pixel
+    (x,y,z) before: (17.84296889851612, 3.912246984706144, 0.8291298942401681)
+    (x,y,z) after: (351.57292333402665, 216.97050180595602, 1.8291298942401681)
+    (x,y,z) before: (29.173896674168645, 0.7435155805960676, 0.8929607095304846)
+    (x,y,z) after: (313.04114946004813, 354.7545835578908, 1.8929607095304846)
+    '''
     ## step 1 : check whether there are any detections
-
+    if len(detections) > 0:
         ## step 2 : loop over all detections
-        
+        for detection in detections:
+            for vehicle_detection in detection[1]:
+                _id, _x, _y, _z, _h, _w, _l, _yaw = vehicle_detection
+                print('raw (x, y, z): ({}, {}, {})'.format(_x, _y, _z))
+                vehicle_detection[0] = 1
+                x = vehicle_detection[1]
+                y = vehicle_detection[2]
+
+                vehicle_detection[1] = y / configs.bev_height * (configs.lim_y[1] - configs.lim_y[0]) + configs.lim_x[0]
+                vehicle_detection[2] = x / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0]) + configs.lim_y[0]
+                vehicle_detection[5] = vehicle_detection[5] / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
+                vehicle_detection[6] = vehicle_detection[6] / configs.bev_height * (configs.lim_y[1] - configs.lim_y[0])
+                #vehicle_detection[5] = vehicle_detection[5] / (configs.lim_y[1] - configs.lim_y[0]) * configs.bev_height
+                #vehicle_detection[1] = 50
+                #vehicle_detection[2] = 50
+                #vehicle_detection[4] = 50
+                #vehicle_detection[5] = 50
+                objects.append(vehicle_detection)
             ## step 3 : perform the conversion using the limits for x, y and z set in the configs structure
-        
+            ## pixel -> metric  
             ## step 4 : append the current object to the 'objects' array
         
     #######
