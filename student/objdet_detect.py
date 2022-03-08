@@ -114,7 +114,7 @@ def load_configs_model(model_name='darknet', configs=None):
     configs.no_cuda = True # if true, cuda is not used
     configs.gpu_idx = 0  # GPU index to use.
     configs.device = torch.device('cpu' if configs.no_cuda else 'cuda:{}'.format(configs.gpu_idx))
-    configs.min_iou = 0.5
+    configs.min_iou = 0.5 #TODO
     return configs
 
 
@@ -205,8 +205,7 @@ def detect_objects(input_bev_maps, model, configs):
                     x, y, w, l, im, re, _, _, _ = obj
                     yaw = np.arctan2(im, re)
                     detections.append([1, x, y, 0.0, 1.50, w, l, yaw])    
-            print("detections: {}".format(detections))         
-
+     
         elif 'fpn_resnet' in configs.arch:
             # decode output and perform post-processing
             
@@ -219,8 +218,7 @@ def detect_objects(input_bev_maps, model, configs):
                     for obj in detection[1]:
                         obj[0] = 1
                         detections.append(obj)
-                    
-            print("detections: {}".format(detections))         
+                         
             #######
             ####### ID_S3_EX1-5 END #######     
 
@@ -245,7 +243,6 @@ def detect_objects(input_bev_maps, model, configs):
         ## step 2 : loop over all detections
         for vehicle_detection in detections:
             _id, _x, _y, _z, _h, _w, _l, _yaw = vehicle_detection
-            print('raw (x, y, z): ({}, {}, {})'.format(_x, _y, _z))
             vehicle_detection[0] = 1
             x = vehicle_detection[1]
             y = vehicle_detection[2]
