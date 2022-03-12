@@ -31,11 +31,8 @@ from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2, lab
 # object detection tools and helper functions
 import misc.objdet_tools as tools
 
-def right_arrow_key_callback(vis):
-    vis.destroy_window()
-
 # visualize lidar point-cloud
-def show_pcl(pcl):
+def show_pcl(pcl, cnt_frame):
 
     ####### ID_S1_EX2 START #######     
     #######
@@ -43,7 +40,7 @@ def show_pcl(pcl):
 
     # step 1 : initialize open3d with key callback and create window
     vis = o3d.visualization.VisualizerWithKeyCallback()
-    vis.create_window()
+    vis.create_window(window_name='Lidar Point Cloud')
 
     # step 2 : create instance of open3d point-cloud class
     pcd = o3d.geometry.PointCloud()
@@ -52,12 +49,26 @@ def show_pcl(pcl):
     pcd.points = o3d.utility.Vector3dVector(pcl[:, :3])
 
     # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
-    vis.add_geometry(pcd)
-    #vis.update_geometry(pcd)
+    if cnt_frame == 0:
+        vis.add_geometry(pcd) 
+    else:
+        vis.update_geometry(pcd)
     
     # step 5 : visualize point cloud and keep window open until right-arrow is pressed (key-code 262)
 
+    # ref https://www.glfw.org/docs/latest/group__keys.html
+    def right_arrow_key_callback(vis):
+        vis.close()
+
+    def space_key_callback(vis):   
+        # helper function to generate images for write up 
+        print("saving image for frame {}".format(cnt_frame))
+        vis.capture_screen_image("student/tmp/pcl_{}.jpg".format(cnt_frame))
+
     vis.register_key_callback(262, right_arrow_key_callback)
+    vis.register_key_callback(32, space_key_callback)
+    vis.update_renderer()
+    vis.poll_events()    
     vis.run()
     #######
     ####### ID_S1_EX2 END #######     
