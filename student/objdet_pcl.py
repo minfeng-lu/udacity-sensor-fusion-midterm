@@ -66,7 +66,7 @@ def show_pcl(pcl, cnt_frame):
         vis.capture_screen_image("student/tmp/pcl_{}.jpg".format(cnt_frame))
 
     vis.register_key_callback(262, right_arrow_key_callback)
-    vis.register_key_callback(32, space_key_callback)
+    # vis.register_key_callback(32, space_key_callback)
     vis.update_renderer()
     vis.poll_events()    
     vis.run()
@@ -147,7 +147,7 @@ def bev_from_pcl(lidar_pcl, configs):
     lidar_pcl_cpy[:, 1] = np.int_(np.floor(lidar_pcl_cpy[:, 1] / bev_discret) + (configs.bev_width + 1) / 2)
 
     # step 4 : visualize point-cloud using the function show_pcl from a previous task
-    #show_pcl(lidar_pcl_cpy)
+    show_pcl(lidar_pcl_cpy, 0)
 
     #######
     ####### ID_S2_EX1 END #######     
