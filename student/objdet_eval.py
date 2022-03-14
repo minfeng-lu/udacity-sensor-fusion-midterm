@@ -72,6 +72,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
                 ## step 6 : if IOU exceeds min_iou threshold, store [iou, dist_x, dist_y, dist_z] in matches_lab_det and increase the TP count
                 if iou > min_iou:
                     matches_lab_det.append([iou, dist_x, dist_y, dist_z])
+                    true_positives += 1
 
             #######
             ####### ID_S4_EX1 END #######     
@@ -90,7 +91,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
     # compute positives and negatives for precision/recall
     
     ## step 1 : compute the total number of positives present in the scene
-     
+    all_positives = labels_valid.sum() 
 
     ## step 2 : compute the number of false negatives
     false_negatives = all_positives - true_positives
@@ -130,10 +131,10 @@ def compute_performance_stats(det_performance_all, configs_det):
     false_negatives = sum(pos_negs_arr[:,2])
     false_positives = sum(pos_negs_arr[:,3])
     ## step 2 : compute precision
-    precision = true_positives / (true_positives + false_positives)
+    precision = true_positives / float(true_positives + false_positives)
 
     ## step 3 : compute recall 
-    recall = true_positives / (true_positives + false_negatives)
+    recall = true_positives / float(true_positives + false_negatives)
 
     #######    
     ####### ID_S4_EX3 END #######     
