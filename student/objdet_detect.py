@@ -14,6 +14,7 @@
 import numpy as np
 import torch
 from easydict import EasyDict as edict
+from tools.objdet_models.resnet.utils.torch_utils import _sigmoid
 
 # add project directory to python path to enable relative imports
 import os
@@ -61,26 +62,23 @@ def load_configs_model(model_name='darknet', configs=None):
         ####### ID_S3_EX1-3 START #######     
         #######
         print("student task ID_S3_EX1-3")
-
         configs.model_path = os.path.join(parent_path, 'tools', 'objdet_models', 'resnet')
         configs.pretrained_filename = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth') 
-        configs.conf_thresh = 0.5
-        configs.nms_thresh = 0.4
-        configs.saved_fn = 'fpn_resnet_18'
-        configs.arch = 'fpn_resnet'
-        configs.pretrained_path = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth') 
+        configs.img_size = 608 
+        configs.conf_thresh = 0.5 
+        configs.nms_thresh = 0.4 
+        configs.saved_fn = 'fpn_resnet' 
+        configs.arch = 'fpn_resnet_18' 
         configs.K = 50
-        configs.no_cuda = False
-        configs.gpu_idx = 0
-        configs.num_samples = None
-        configs.num_workers = 1
-        configs.batch_size = 4
+        configs.num_samples = None 
+        configs.num_workers = 1 
+        configs.batch_size = 1 
         configs.peak_thresh = 0.2
-        configs.save_test_output = False
+        configs.save_test_output = False 
         configs.output_width = 608
         configs.output_video_fn = 'out_fpn_resnet_18'
-        configs.output_format = 'image'
-        configs.pin_memory = True
+        configs.output_format = 'image' 
+        configs.pin_memory = True #
         configs.distributed = False  # For testing on 1 GPU only
         configs.input_size = (608, 608)
         configs.hm_size = (152, 152)
@@ -101,9 +99,8 @@ def load_configs_model(model_name='darknet', configs=None):
             'dim': configs.num_dim
         }
         configs.num_input_features = 4
-        #configs.root_dir = '../'
-        #configs.dataset_dir = os.path.join(configs.root_dir, 'dataset', 'kitti')
-    
+        configs.use_giou_loss = False 
+
         #######
         ####### ID_S3_EX1-3 END #######     
 
@@ -114,7 +111,6 @@ def load_configs_model(model_name='darknet', configs=None):
     configs.no_cuda = True # if true, cuda is not used
     configs.gpu_idx = 0  # GPU index to use.
     configs.device = torch.device('cpu' if configs.no_cuda else 'cuda:{}'.format(configs.gpu_idx))
-    configs.min_iou = 0.5 #TODO
     return configs
 
 
@@ -161,7 +157,7 @@ def create_model(configs):
         ####### ID_S3_EX1-4 START #######     
         #######
         print("student task ID_S3_EX1-4")
-        arch_parts = configs.saved_fn.split('_')
+        arch_parts = configs.arch.split('_')
         num_layers = int(arch_parts[-1])
         model = fpn_resnet.get_pose_net(num_layers=num_layers, heads=configs.heads, head_conv=configs.head_conv,imagenet_pretrained=configs.imagenet_pretrained)
         #######
@@ -212,13 +208,10 @@ def detect_objects(input_bev_maps, model, configs):
             ####### ID_S3_EX1-5 START #######     
             #######
             print("student task ID_S3_EX1-5")
-            detections = []
-            for detection in post_processing(decode(outputs['hm_cen'], outputs['cen_offset'], outputs['direction'], outputs['z_coor'], outputs['dim']).numpy(), configs):
-                if len(detection[1]) > 0:
-                    for obj in detection[1]:
-                        obj[0] = 1
-                        detections.append(obj)
-                         
+            detections = decode(_sigmoid(outputs['hm_cen']), _sigmoid(outputs['cen_offset']), outputs['direction'], outputs['z_coor'], outputs['dim'], K=configs.K) 
+            detections = detections.cpu().numpy().astype(np.float32)
+            detections = post_processing(detections, configs)
+            detections = detections[0][1]
             #######
             ####### ID_S3_EX1-5 END #######     
 
@@ -229,37 +222,25 @@ def detect_objects(input_bev_maps, model, configs):
     # Extract 3d bounding boxes from model response
     print("student task ID_S3_EX2")
     objects = [] 
-
-    '''
-    (x,y,z) before: (49.575214383670755, 4.0394287166964205, 1.0292643213596193) metric
-    (x,y,z) after: (353.1194531950285, 602.8346069054364, 2.0292643213596193) pixel
-    (x,y,z) before: (17.84296889851612, 3.912246984706144, 0.8291298942401681)
-    (x,y,z) after: (351.57292333402665, 216.97050180595602, 1.8291298942401681)
-    (x,y,z) before: (29.173896674168645, 0.7435155805960676, 0.8929607095304846)
-    (x,y,z) after: (313.04114946004813, 354.7545835578908, 1.8929607095304846)
-    '''
     ## step 1 : check whether there are any detections
     if len(detections) > 0:
         ## step 2 : loop over all detections
         for vehicle_detection in detections:
             _id, _x, _y, _z, _h, _w, _l, _yaw = vehicle_detection
-            vehicle_detection[0] = 1
-            x = vehicle_detection[1]
-            y = vehicle_detection[2]
-
-            vehicle_detection[1] = y / configs.bev_height * (configs.lim_y[1] - configs.lim_y[0]) + configs.lim_x[0]
-            vehicle_detection[2] = x / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0]) + configs.lim_y[0]
-            vehicle_detection[5] = vehicle_detection[5] / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
-            vehicle_detection[6] = vehicle_detection[6] / configs.bev_height * (configs.lim_y[1] - configs.lim_y[0])
-            #vehicle_detection[5] = vehicle_detection[5] / (configs.lim_y[1] - configs.lim_y[0]) * configs.bev_height
-            #vehicle_detection[1] = 50
-            #vehicle_detection[2] = 50
-            #vehicle_detection[4] = 50
-            #vehicle_detection[5] = 50
-            objects.append(vehicle_detection)
             ## step 3 : perform the conversion using the limits for x, y and z set in the configs structure
             ## pixel -> metric  
+            x = _y / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
+            y = _x / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0]) - (configs.lim_y[1] - configs.lim_y[0])/2.0 
+            z = _z
+            w = _w / configs.bev_width * (configs.lim_y[1] - configs.lim_y[0]) 
+            l = _l / configs.bev_height * (configs.lim_x[1] - configs.lim_x[0])
+            h = _h
+            yaw = _yaw
             ## step 4 : append the current object to the 'objects' array
+            if ((x >= configs.lim_x[0]) and (x <= configs.lim_x[1])
+            and (y >= configs.lim_y[0]) and (y <= configs.lim_y[1])
+            and (z >= configs.lim_z[0]) and (z <= configs.lim_z[1])):
+                objects.append([1, x, y, z, h, w, l, yaw])
         
     #######
     ####### ID_S3_EX2 START #######   
