@@ -210,12 +210,6 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
         l = _l / (configs.lim_x[1] - configs.lim_x[0]) * configs.bev_height
         yaw = -_yaw
 
-        print('(x, y, z)')
-        print('metric value: ({}, {}, {})'.format(_x, _y, _z))
-        print('pixel value: ({}, {}, {})'.format(x, y, z))
-        #print('(h, w, l)')
-        #print('metric value: ({}, {}, {})'.format(_h, _w, _l))
-        #print('pixel value: ({}, {}, {})'.format(_h, w, l))
         # draw object bounding box into birds-eye view
         if not color:
             color = configs.obj_colors[int(_id)]
