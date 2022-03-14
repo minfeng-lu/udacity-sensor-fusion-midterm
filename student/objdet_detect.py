@@ -57,6 +57,7 @@ def load_configs_model(model_name='darknet', configs=None):
         configs.num_workers = 4 
         configs.pin_memory = True
         configs.use_giou_loss = False
+        configs.min_iou = 0.5
 
     elif model_name == 'fpn_resnet':
         ####### ID_S3_EX1-3 START #######     
@@ -68,7 +69,8 @@ def load_configs_model(model_name='darknet', configs=None):
         configs.conf_thresh = 0.5 
         configs.nms_thresh = 0.4 
         configs.saved_fn = 'fpn_resnet' 
-        configs.arch = 'fpn_resnet_18' 
+        configs.arch = 'fpn_resnet' 
+        configs.full_arch = 'fpn_resnet_18' 
         configs.K = 50
         configs.num_samples = None 
         configs.num_workers = 1 
@@ -157,7 +159,7 @@ def create_model(configs):
         ####### ID_S3_EX1-4 START #######     
         #######
         print("student task ID_S3_EX1-4")
-        arch_parts = configs.arch.split('_')
+        arch_parts = configs.full_arch.split('_')
         num_layers = int(arch_parts[-1])
         model = fpn_resnet.get_pose_net(num_layers=num_layers, heads=configs.heads, head_conv=configs.head_conv,imagenet_pretrained=configs.imagenet_pretrained)
         #######
