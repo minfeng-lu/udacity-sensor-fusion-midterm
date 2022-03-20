@@ -47,7 +47,8 @@ class Association:
             for j in range(M):
                 meas = meas_list[j]
                 dist = self.MHD(track, meas, KF)
-                self.association_matrix[i, j] = dist
+                if self.gating(dist, meas.sensor):
+                    self.association_matrix[i, j] = dist
  
         self.unassigned_tracks = np.arange(len(track_list)).tolist()
         self.unassigned_meas = np.arange(len(meas_list)).tolist()  
@@ -107,14 +108,13 @@ class Association:
         ############
         # TODO Step 3: calculate and return Mahalanobis distance
         ############
-        H = np.matrix([[1, 0, 0, 0, 0, 0],
-                       [0, 1, 0, 0, 0, 0],
-                       [0, 0, 1, 0, 0 ,0]]) 
-        gamma = meas.z - H*track.x
+        
+        gamma = meas.z - meas.sensor.get_hx(track.x)
+        H = meas.sensor.get_H(track.x)
         S = H*track.P*H.transpose() + meas.R
         MHD = gamma.transpose()*np.linalg.inv(S)*gamma # Mahalanobis distance formula
         return MHD
-        
+
         ############
         # END student code
         ############ 
