@@ -131,3 +131,51 @@ Parts of this project are based on the following repositories:
 
 ## License
 [License](LICENSE.md)
+
+</br>
+</br>
+
+# Project Writeup
+
+## Recap
+This project implements a sensor fusion system by combining lidar data and camera data to keep track of multiple objects from Waymo open dataset. 
+
+### Step 1
+This step implements an exended Kalman filter. It provides `predict()` and `update()` function to enable single target tracking.
+</br>
+
+![alt step1 RMSE](https://github.com/minfeng-lu/udacity-sensor-fusion-midterm/blob/main/img/step1_%20RMSE.png?raw=true)
+
+### Step 2
+This step implements track management to initialized track, update track state and score and delete track. New track should be automatically initialized when unassigned measurements occur. Track will be labeled as confirmed onces it meets threshold and deleted after it falls out of visible range. 
+</br>
+
+![alt step2 RMSE](https://github.com/minfeng-lu/udacity-sensor-fusion-midterm/blob/main/img/step2_RMSE.png?raw=true)
+
+### Step 3
+This step implments single nearest neighbour data association and gating. This step associates measurements to tracks and it enables multi-target tracking. 
+</br>
+
+![alt step3 RMSE](https://github.com/minfeng-lu/udacity-sensor-fusion-midterm/blob/main/img/step3_RMSE.png?raw=true)
+
+### Step 4
+This step implements nonlinear camera measurement model and sensor visibility check. In all previous steps, it is not technically sensor funsion since camera measurements is not used. This step udpates all tracks with lidar measurements and then with camera measurements and further improves the tracking performnace than using lidar alone. 
+
+</br>
+
+![alt step4 RMSE](https://github.com/minfeng-lu/udacity-sensor-fusion-midterm/blob/main/img/step4_RMSE.png?raw=true)
+
+
+Generated video
+
+https://github.com/minfeng-lu/udacity-sensor-fusion-midterm/blob/main/img/my_tracking_results.mp4
+
+## Benefits of Camera-Lidar Fusion
+Each sensor type has its own limitations. Combing different sensors makes each measurement compliment with each other and makes predictions more accurate. Camera does a much better job in object detection and classification in enviroments with adequate light source but the performance decreases during adverse weather like rain/haze/fog or in darkness. Lidar is able to perform well in these situations and also does a better job in gathers spatial information like distance.
+
+## Real-Life Challenges
+* Noise variance in realized is not the same 
+* Aligning measurements from different sensors is hard
+
+## Future Improvement 
+This project only uses front-facing lidar and camera. in real life, a self driving car has many more sensors and we can imporve the performance by fusing more sensors. 
