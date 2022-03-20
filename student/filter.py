@@ -35,9 +35,9 @@ class Filter:
         dim_state = self.dim_state
         dt = self.dt
         F = np.identity(dim_state).reshape(dim_state, dim_state)
-        F[0, 3] = 1
-        F[1, 4] = 1
-        F[2, 5] = 1
+        F[0, 3] = dt
+        F[1, 4] = dt
+        F[2, 5] = dt
         return np.matrix(F)
         
         ############
@@ -67,7 +67,7 @@ class Filter:
         Q[3, 3] = qt    
         Q[4, 4] = qt    
         Q[5, 5] = qt    
-        return Q
+        return np.matrix(Q)
         
         ############
         # END student code
@@ -78,8 +78,8 @@ class Filter:
         # TODO Step 1: predict state x and estimation error covariance P to next timestep, save x and P in track
         ############
         F = self.F()
-        x = F * track.x # state prediction
-        P = F * track.P* F.transpose() + self.Q() # covariance prediction 
+        x = F * track.x 
+        P = F * track.P* F.transpose() + self.Q() 
         track.set_x(x)
         track.set_P(P)       
         ############
